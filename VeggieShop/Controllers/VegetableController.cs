@@ -4,20 +4,32 @@ namespace VeggieShop.Controllers
 {
     public class Vegetable
     {
-        public int GUID { get; set; }
+        public Guid Guid { get; set; }
 
         public string Name { get; set; } = string.Empty;
 
-        public float PriceDollarPerKg { get; set; }
+        /// <summary>
+        /// Price in dollars per kilo
+        /// </summary>
+        public decimal PricePerKg { get; set; }
 
-        public float PriceCentPerGr => PriceDollarPerKg * 100 / 1000;
+        /// <summary>
+        /// Price in cents per gramm
+        /// </summary>
+        public decimal PricePerGr => PricePerKg * 100 / 1000;
     }
 
-    public class DetailedVegetable : Vegetable
+    public class VegetableDetailed : Vegetable
     {
-        public float StockQuantityKg { get; set; }
+        /// <summary>
+        /// Stock quantity in Kilos
+        /// </summary>
+        public double StockQuantity { get; set; }
 
-        public float DiameterCm { get; set; }
+        /// <summary>
+        /// Diameter in Centimeters
+        /// </summary>
+        public int Diameter { get; set; }
     }
 
     [ApiController]
@@ -25,132 +37,130 @@ namespace VeggieShop.Controllers
     public class VegetableController : ControllerBase
     {
 
-        private static List<DetailedVegetable> vegetablesList = new List<DetailedVegetable> {
-            new DetailedVegetable
+        private static readonly List<VegetableDetailed> _vegetablesList = new()
+        {
+            new VegetableDetailed
             {
-                GUID = 1,
+                Guid = Guid.Parse("cf995fac-32ea-44d7-8d27-6191e7d8000f"),
                 Name = "Potato",
-                PriceDollarPerKg = 0.75f,
-                StockQuantityKg = 453,
-                DiameterCm = 5
+                PricePerKg = 0.75M,
+                StockQuantity = 453,
+                Diameter = 5,
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 2,
+                Guid = Guid.Parse("1666e4d2-87b8-4fbb-a369-92387fffc9b8"),
                 Name = "Tomato",
-                PriceDollarPerKg = 1.15f,
-                StockQuantityKg = 50,
-                DiameterCm = 7.5f
+                PricePerKg = 1.15M,
+                StockQuantity = 50,
+                Diameter = 7
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 3,
+                Guid = Guid.Parse("a7443440-71b7-4e19-a7b2-2a6fc2e8f803"),
                 Name = "Carrot",
-                PriceDollarPerKg = 0.25f,
-                StockQuantityKg = 46,
-                DiameterCm = 3.3f
+                PricePerKg = 0.25M,
+                StockQuantity = 46,
+                Diameter = 3
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 4,
+                Guid = Guid.Parse("8146f966-0825-410d-a4f8-211e261900fa"),
                 Name = "Beetroot",
-                PriceDollarPerKg = 0.5f,
-                StockQuantityKg = 124,
-                DiameterCm = 10
+                PricePerKg = 0.5M,
+                StockQuantity = 124,
+                Diameter = 10
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 5,
+                Guid = Guid.Parse("b2b5793e-6dde-407c-af90-8dfde2f45f9b"),
                 Name = "Pumpkin",
-                PriceDollarPerKg = 1.45f,
-                StockQuantityKg = 276,
-                DiameterCm = 50
+                PricePerKg = 1.45M,
+                StockQuantity = 276,
+                Diameter = 50
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 6,
+                Guid = Guid.Parse("eff0dead-9c93-4377-a62f-4222ce9ca7d1"),
                 Name = "Cucumber",
-                PriceDollarPerKg = 0.65f,
-                StockQuantityKg = 43,
-                DiameterCm = 4
+                PricePerKg = 0.65M,
+                StockQuantity = 43,
+                Diameter = 4
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 7,
+                Guid = Guid.Parse("3cbc6681-5dba-42d1-94a9-a327070a3157"),
                 Name = "Garlic",
-                PriceDollarPerKg = 3.75f,
-                StockQuantityKg = 28,
-                DiameterCm = 6.5f
+                PricePerKg = 3.75M,
+                StockQuantity = 28,
+                Diameter = 6
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 8,
+                Guid = Guid.Parse("11069f2f-1636-4ffb-b6fa-b723756bd057"),
                 Name = "Capsicum",
-                PriceDollarPerKg = 2.55f,
-                StockQuantityKg = 73,
-                DiameterCm = 13.5f
+                PricePerKg = 2.55M,
+                StockQuantity = 73,
+                Diameter = 13
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 9,
+                Guid = Guid.Parse("0c1c47b1-89b5-45cc-a914-d26ab14d824a"),
                 Name = "Broccoli",
-                PriceDollarPerKg = 2,
-                StockQuantityKg = 82,
-                DiameterCm = 16.8f
+                PricePerKg = 2,
+                StockQuantity = 82,
+                Diameter = 16
             },
-            new DetailedVegetable
+            new VegetableDetailed
             {
-                GUID = 10,
+                Guid = Guid.Parse("b7c268f4-f4bf-4db8-ad48-9c5985758c1d"),
                 Name = "Beans",
-                PriceDollarPerKg = 1.25f,
-                StockQuantityKg = 147,
-                DiameterCm = 1.5f
+                PricePerKg = 1.25M,
+                StockQuantity = 147,
+                Diameter = 1
             },
         };
 
         [HttpGet]
-        public IEnumerable<Vegetable> GetAllVegetables()
+        public IActionResult GetAllVegetables()
         {
-            return vegetablesList.Select(veggie => veggie as Vegetable);
+            var veggieData = _vegetablesList.Select(veggie => veggie as Vegetable);
+            return Ok(veggieData);
         }
 
-        [HttpGet("{name}")]
-        public DetailedVegetable? GetVegetableByName(string name)
+        [HttpGet("{id}")]
+        public IActionResult GetVegetableById(Guid id)
         {
-            return vegetablesList.Where(veggie => veggie.Name.ToLower() == name.ToLower()).FirstOrDefault();
+            var vegie = _vegetablesList.FirstOrDefault(veggie => veggie.Guid == id);
+            return vegie is not null ? Ok(vegie) : NotFound();
         }
 
         [HttpPost]
-        public DetailedVegetable? addVegetable(DetailedVegetable vegetable)
+        public IActionResult AddVegetable(VegetableDetailed vegetable)
         {
-            int? id = vegetablesList.OrderBy(veggie => veggie.GUID).Last()?.GUID;
-            vegetable.GUID = (int)(id == null ? 1 : ++id);
-            vegetablesList.Add(vegetable);
-            return vegetablesList.Where(veggie => veggie.GUID == id).FirstOrDefault();
+            vegetable.Guid = Guid.NewGuid();
+            _vegetablesList.Add(vegetable);
+            return Ok(vegetable);
         }
 
         [HttpPut("{id}")]
-        public DetailedVegetable? updateVegetable(int id, DetailedVegetable vegetable)
+        public IActionResult UpdateVegetable(Guid id, VegetableDetailed vegetable)
         { 
-            var index = vegetablesList.FindIndex(veggie => veggie.GUID == id);
-            if (index != -1)
-            {
-                vegetablesList[index] = vegetable;
-                return vegetablesList[index];
-            }
-            else
-            {
-                return null;
-            }
+            var veggie = _vegetablesList.Single(veggie => veggie.Guid == id);
+            veggie.Name = vegetable.Name;
+            veggie.PricePerKg = vegetable.PricePerKg;
+            veggie.StockQuantity = vegetable.StockQuantity;
+            veggie.Diameter = vegetable.Diameter;
+            return Ok(veggie);
         }
 
         [HttpDelete("{id}")]
-        public IActionResult deleteVegetable(int id)
+        public IActionResult DeleteVegetable(Guid id)
         {
-            var index = vegetablesList.FindIndex(veggie => veggie.GUID == id);
+            var index = _vegetablesList.FindIndex(veggie => veggie.Guid == id);
             if (index != -1)
             {
-                vegetablesList.RemoveAt(index);
+                _vegetablesList.RemoveAt(index);
                 return NoContent();
             }
             else
