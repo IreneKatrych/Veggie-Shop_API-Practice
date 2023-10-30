@@ -23,7 +23,7 @@ namespace VeggieShop.Controllers
         public decimal PricePerGr => PricePerKg * 100 / 1000;
 
         /// <summary>
-        /// Defines if vegetable cold be edited
+        /// Defines if vegetable could be edited
         /// </summary>
         public bool IsLocked { get; set; }
     }
@@ -158,10 +158,9 @@ namespace VeggieShop.Controllers
         [HttpPost]
         public IActionResult AddVegetable(VegetableDetailed vegetable)
         {
-            if (checkIfNameExist(vegetable.Name))
+            if (NameExists(vegetable.Name, null))
             {
-                ModelState.AddModelError("Name", "Vegetable with same name already exists.");
-                return BadRequest(ModelState);
+                return Problem("Vegetable with same name already exists.", "Vegetable", StatusCodes.Status403Forbidden);
             }
 
             vegetable.Guid = Guid.NewGuid();
@@ -176,14 +175,12 @@ namespace VeggieShop.Controllers
 
             if (veggie.IsLocked) 
             {
-                ModelState.AddModelError("IsLocked", "This vegetable cannot be edited.");
-                return BadRequest(ModelState);
+                return Problem("Vegetable is already locked.", "Vegetable", StatusCodes.Status423Locked, "Locked");
             }
 
-            if (checkIfNameExist(vegetable.Name))
+            if (NameExists(vegetable.Name, id))
             {
-                ModelState.AddModelError("Name", "Vegetable with same name already exists.");
-                return BadRequest(ModelState);
+                return Problem("Vegetable with same name already exists.", "Vegetable", StatusCodes.Status403Forbidden);
             }
 
             veggie.Name = vegetable.Name;
@@ -208,22 +205,21 @@ namespace VeggieShop.Controllers
             }
         }
 
-        [HttpPut("lock/{id}")]
+        [HttpPost("lock/{id}")]
         public IActionResult LockVegetable(Guid id)
         {
             var veggie = _vegetablesList.Single(veggie => veggie.Guid == id);
 
             if (veggie.IsLocked)
             {
-                ModelState.AddModelError("IsLocked", "This vegetable is already locked.");
-                return BadRequest(ModelState);
+                return Problem("Vegetable is already locked.", "Vegetable", StatusCodes.Status423Locked, "Locked");
             }
 
             veggie.IsLocked = true;
             return Ok();
         }
 
-        [HttpPut("unlock/{id}")]
+        [HttpPost("unlock/{id}")]
         public IActionResult UnlockVegetable(Guid id)
         {
             var veggie = _vegetablesList.Single(veggie => veggie.Guid == id);
@@ -231,9 +227,10 @@ namespace VeggieShop.Controllers
             return Ok();
         }
 
-        private bool checkIfNameExist(string name)
+        private bool NameExists(string name, Guid? id)
         {
-            return _vegetablesList.Any(veggie => veggie.Name.ToLower() == name.ToLower());
+            return _vegetablesList.Any(veggie => veggie.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)
+                && id != veggie.Guid);
         }
     }
 }
