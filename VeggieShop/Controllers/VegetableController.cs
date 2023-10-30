@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.ComponentModel.DataAnnotations;
 
 namespace VeggieShop.Controllers
 {
@@ -6,17 +8,24 @@ namespace VeggieShop.Controllers
     {
         public Guid Guid { get; set; }
 
+        [StringLength(16, MinimumLength = 3)]
         public string Name { get; set; } = string.Empty;
 
         /// <summary>
         /// Price in dollars per kilo
         /// </summary>
+        [Range(0.01, (double)decimal.MaxValue)]
         public decimal PricePerKg { get; set; }
 
         /// <summary>
         /// Price in cents per gramm
         /// </summary>
         public decimal PricePerGr => PricePerKg * 100 / 1000;
+
+        /// <summary>
+        /// Defines if vegetable cold be edited
+        /// </summary>
+        public bool IsLocked { get; set; }
     }
 
     public class VegetableDetailed : Vegetable
@@ -29,6 +38,7 @@ namespace VeggieShop.Controllers
         /// <summary>
         /// Diameter in Centimeters
         /// </summary>
+        [Range(1, int.MaxValue)]
         public int Diameter { get; set; }
     }
 
@@ -46,6 +56,7 @@ namespace VeggieShop.Controllers
                 PricePerKg = 0.75M,
                 StockQuantity = 453,
                 Diameter = 5,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -53,7 +64,8 @@ namespace VeggieShop.Controllers
                 Name = "Tomato",
                 PricePerKg = 1.15M,
                 StockQuantity = 50,
-                Diameter = 7
+                Diameter = 7,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -61,7 +73,8 @@ namespace VeggieShop.Controllers
                 Name = "Carrot",
                 PricePerKg = 0.25M,
                 StockQuantity = 46,
-                Diameter = 3
+                Diameter = 3,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -69,7 +82,8 @@ namespace VeggieShop.Controllers
                 Name = "Beetroot",
                 PricePerKg = 0.5M,
                 StockQuantity = 124,
-                Diameter = 10
+                Diameter = 10,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -77,7 +91,8 @@ namespace VeggieShop.Controllers
                 Name = "Pumpkin",
                 PricePerKg = 1.45M,
                 StockQuantity = 276,
-                Diameter = 50
+                Diameter = 50,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -85,7 +100,8 @@ namespace VeggieShop.Controllers
                 Name = "Cucumber",
                 PricePerKg = 0.65M,
                 StockQuantity = 43,
-                Diameter = 4
+                Diameter = 4,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -93,7 +109,8 @@ namespace VeggieShop.Controllers
                 Name = "Garlic",
                 PricePerKg = 3.75M,
                 StockQuantity = 28,
-                Diameter = 6
+                Diameter = 6,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -101,7 +118,8 @@ namespace VeggieShop.Controllers
                 Name = "Capsicum",
                 PricePerKg = 2.55M,
                 StockQuantity = 73,
-                Diameter = 13
+                Diameter = 13,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -109,7 +127,8 @@ namespace VeggieShop.Controllers
                 Name = "Broccoli",
                 PricePerKg = 2,
                 StockQuantity = 82,
-                Diameter = 16
+                Diameter = 16,
+                IsLocked = false,
             },
             new VegetableDetailed
             {
@@ -117,7 +136,8 @@ namespace VeggieShop.Controllers
                 Name = "Beans",
                 PricePerKg = 1.25M,
                 StockQuantity = 147,
-                Diameter = 1
+                Diameter = 1,
+                IsLocked = false,
             },
         };
 
@@ -138,6 +158,12 @@ namespace VeggieShop.Controllers
         [HttpPost]
         public IActionResult AddVegetable(VegetableDetailed vegetable)
         {
+            if (checkIfNameExist(vegetable.Name))
+            {
+                ModelState.AddModelError("Name", "Vegetable with same name already exists.");
+                return BadRequest(ModelState);
+            }
+
             vegetable.Guid = Guid.NewGuid();
             _vegetablesList.Add(vegetable);
             return Ok(vegetable);
@@ -147,6 +173,19 @@ namespace VeggieShop.Controllers
         public IActionResult UpdateVegetable(Guid id, VegetableDetailed vegetable)
         { 
             var veggie = _vegetablesList.Single(veggie => veggie.Guid == id);
+
+            if (veggie.IsLocked) 
+            {
+                ModelState.AddModelError("IsLocked", "This vegetable cannot be edited.");
+                return BadRequest(ModelState);
+            }
+
+            if (checkIfNameExist(vegetable.Name))
+            {
+                ModelState.AddModelError("Name", "Vegetable with same name already exists.");
+                return BadRequest(ModelState);
+            }
+
             veggie.Name = vegetable.Name;
             veggie.PricePerKg = vegetable.PricePerKg;
             veggie.StockQuantity = vegetable.StockQuantity;
@@ -167,6 +206,34 @@ namespace VeggieShop.Controllers
             {
                 return NotFound();
             }
+        }
+
+        [HttpPut("lock/{id}")]
+        public IActionResult LockVegetable(Guid id)
+        {
+            var veggie = _vegetablesList.Single(veggie => veggie.Guid == id);
+
+            if (veggie.IsLocked)
+            {
+                ModelState.AddModelError("IsLocked", "This vegetable is already locked.");
+                return BadRequest(ModelState);
+            }
+
+            veggie.IsLocked = true;
+            return Ok();
+        }
+
+        [HttpPut("unlock/{id}")]
+        public IActionResult UnlockVegetable(Guid id)
+        {
+            var veggie = _vegetablesList.Single(veggie => veggie.Guid == id);
+            veggie.IsLocked = false;
+            return Ok();
+        }
+
+        private bool checkIfNameExist(string name)
+        {
+            return _vegetablesList.Any(veggie => veggie.Name.ToLower() == name.ToLower());
         }
     }
 }
