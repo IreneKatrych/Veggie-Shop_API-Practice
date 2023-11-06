@@ -295,14 +295,16 @@ namespace VeggieShop.Controllers
             return 0.10M * diameter;
         }
 
-        private SlicedVegetable GetSlisedVegetable(VegetableDetailed vegie)
+        private static SlicedVegetable GetSlisedVegetable(VegetableDetailed veggie)
         {
-            SlicedVegetable result = new SlicedVegetable();
-            result.Guid = vegie.Guid;
-            result.Name = vegie.Name;
-            result.IsLocked = vegie.IsLocked;
-            result.PricePerKg = vegie.PricePerKg;
-            result.SlicingPrice = PriceSliced(vegie.Diameter);
+            SlicedVegetable result = new()
+            {
+                Guid = veggie.Guid,
+                Name = veggie.Name,
+                IsLocked = veggie.IsLocked,
+                PricePerKg = veggie.PricePerKg,
+                SlicingPrice = PriceSliced(veggie.Diameter)
+            };
             return result;
         }
 
