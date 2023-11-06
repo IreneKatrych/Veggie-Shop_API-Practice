@@ -42,10 +42,45 @@ namespace VeggieShop.Controllers
         public int Diameter { get; set; }
     }
 
+    public class SlicedVegetable : Vegetable
+    {
+        /// <summary>
+        /// Price for slicing 1kg of vegetable.
+        /// </summary>
+        public decimal SlicingPrice { get; set; }
+
+        /// <summary>
+        /// Price per 1kg of sliced vegetable.
+        /// </summary>
+        public decimal SlicedPrice => SlicingPrice + PricePerKg;
+    }
+
+    public class SoupKitVegetable : SlicedVegetable
+    { 
+        public double Weight { get; set; }
+
+        public decimal TotalPrice => (decimal)Weight * PricePerKg;
+
+        public decimal TotalPriceSliced => (decimal)Weight * SlicedPrice;
+
+    }
+
+    public class SoupKit
+    {
+        public List<SoupKitVegetable> Vegetables { get; set; } = new List<SoupKitVegetable>();
+
+        public double Weight { get; set; }
+
+        public decimal Price => Vegetables.Sum(veggie => veggie.TotalPrice);
+
+        public decimal PriceSliced => Vegetables.Sum(veggie => veggie.TotalPriceSliced);
+    }
+
     [ApiController]
     [Route("vegetable")]
     public class VegetableController : ControllerBase
     {
+        const int SOUP_KIT_COUNT = 3;
 
         private static readonly List<VegetableDetailed> _vegetablesList = new()
         {
@@ -227,10 +262,89 @@ namespace VeggieShop.Controllers
             return Ok();
         }
 
+        [HttpGet("sliced/{id}")]
+        public IActionResult GetPriceSliced(Guid id)
+        {
+            var vegie = _vegetablesList.FirstOrDefault(veggie => veggie.Guid == id);
+            if (vegie == null)
+            {
+                return NotFound();
+            }
+
+            SlicedVegetable result = new SlicedVegetable();
+            result.Guid = vegie.Guid;
+            result.Name = vegie.Name;
+            result.IsLocked = vegie.IsLocked;
+            result.PricePerKg = vegie.PricePerKg;
+            result.SlicingPrice = PriceSliced(vegie.Diameter);
+            return Ok(result);
+        }
+
+        [HttpGet("soupkit/{weight}")]
+        public IActionResult GetSoupKit(double weight)
+        {
+            var eachWeight = weight / SOUP_KIT_COUNT;
+            var availableVeggies = _vegetablesList.Where(veggie => veggie.StockQuantity >= eachWeight);
+
+            if (availableVeggies.Count() < SOUP_KIT_COUNT)
+            {
+                return NotFound();
+            }
+
+            var soupKit = new SoupKit();
+            soupKit.Weight = weight;
+            var randomVeggies = GetRandomVeggies(availableVeggies, SOUP_KIT_COUNT);
+            foreach (var randVeggie in randomVeggies)
+            {
+                var veggie = new SoupKitVegetable();
+                veggie.Guid = randVeggie.Guid;
+                veggie.Name = randVeggie.Name;
+                veggie.PricePerKg = randVeggie.PricePerKg;
+                veggie.Weight = eachWeight;
+                veggie.SlicingPrice = PriceSliced(randVeggie.Diameter);
+                soupKit.Vegetables.Add(veggie);
+            }
+
+            return Ok(soupKit);
+        }
+
         private bool NameExists(string name, Guid? id)
         {
             return _vegetablesList.Any(veggie => veggie.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)
                 && id != veggie.Guid);
+        }
+
+        private decimal PriceSliced(int diameter)
+        { 
+            return 0.10M * diameter;
+        }
+
+        private IEnumerable<VegetableDetailed> GetRandomVeggies(IEnumerable<VegetableDetailed> availableVeggies, int count)
+        {
+            if (availableVeggies.Count() == count)
+            {
+                return availableVeggies;
+            }
+
+            var result = new List<VegetableDetailed>();
+            var rand = new Random();
+            var indexes = new List<int>();
+
+            while (indexes.Count() < count)
+            {
+                var newNum = rand.Next(availableVeggies.Count());
+                if (!indexes.Contains(newNum))
+                {
+                    indexes.Add(newNum);
+                }
+            }
+
+            for (var i = 0; i < indexes.Count(); i++)
+            {
+                result.Add(availableVeggies.ElementAt(indexes[i]));
+            }
+
+            return result;
         }
     }
 }
