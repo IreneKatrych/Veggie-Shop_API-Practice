@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using System.ComponentModel.DataAnnotations;
 
 namespace VeggieShop.Controllers
@@ -42,10 +41,35 @@ namespace VeggieShop.Controllers
         public int Diameter { get; set; }
     }
 
+    public class SlicedVegetable : Vegetable
+    {
+        /// <summary>
+        /// Price for slicing 1kg of vegetable.
+        /// </summary>
+        public decimal SlicingPrice { get; set; }
+
+        /// <summary>
+        /// Price per 1kg of sliced vegetable.
+        /// </summary>
+        public decimal SlicedPrice => SlicingPrice + PricePerKg;
+    }
+
+    public class SoupKit
+    {
+        public List<SlicedVegetable> Vegetables { get; set; } = new List<SlicedVegetable>();
+
+        public double Weight { get; set; }
+
+        public decimal Price { get; set; }
+
+        public decimal PriceSliced { get; set; }
+    }
+
     [ApiController]
     [Route("vegetable")]
     public class VegetableController : ControllerBase
     {
+        const int SOUP_KIT_COUNT = 3;
 
         private static readonly List<VegetableDetailed> _vegetablesList = new()
         {
@@ -149,10 +173,16 @@ namespace VeggieShop.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetVegetableById(Guid id)
+        public IActionResult GetVegetableById(Guid id, [FromQuery] bool sliced)
         {
             var vegie = _vegetablesList.FirstOrDefault(veggie => veggie.Guid == id);
-            return vegie is not null ? Ok(vegie) : NotFound();
+
+            if (vegie is null)
+            {
+                return NotFound();
+            }
+                 
+            return sliced ? Ok(GetSlisedVegetable(vegie)) : Ok(vegie);
         }
 
         [HttpPost]
@@ -227,10 +257,56 @@ namespace VeggieShop.Controllers
             return Ok();
         }
 
-        private bool NameExists(string name, Guid? id)
+        [HttpGet("composesoupkit")]
+        public IActionResult GetSoupKit([FromQuery] double weight)
+        {
+            var eachWeight = weight / SOUP_KIT_COUNT;
+            var availableVeggies = _vegetablesList.Where(veggie => veggie.StockQuantity >= eachWeight);
+
+            if (availableVeggies.Count() < SOUP_KIT_COUNT)
+            {
+                return Problem("There are no available vegetables for the soupkit.", "Vegetable", StatusCodes.Status406NotAcceptable);
+            }
+
+            var soupKit = new SoupKit();
+            var randomVeggies = availableVeggies.OrderBy(veggie => Random.Shared.Next())
+                .Take(SOUP_KIT_COUNT);
+
+            foreach (var randVeggie in randomVeggies)
+            {
+                soupKit.Vegetables.Add(GetSlisedVegetable(randVeggie));
+            }
+
+            soupKit.Weight = weight;
+            soupKit.Price = soupKit.Vegetables.Sum(veggie => veggie.PricePerKg * (decimal)eachWeight);
+            soupKit.PriceSliced = soupKit.Vegetables.Sum(veggie => veggie.SlicedPrice * (decimal)eachWeight);
+
+            return Ok(soupKit);
+        }
+
+        private static bool NameExists(string name, Guid? id)
         {
             return _vegetablesList.Any(veggie => veggie.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)
                 && id != veggie.Guid);
         }
+
+        private static decimal PriceSliced(int diameter)
+        { 
+            return 0.10M * diameter;
+        }
+
+        private static SlicedVegetable GetSlisedVegetable(VegetableDetailed veggie)
+        {
+            SlicedVegetable result = new()
+            {
+                Guid = veggie.Guid,
+                Name = veggie.Name,
+                IsLocked = veggie.IsLocked,
+                PricePerKg = veggie.PricePerKg,
+                SlicingPrice = PriceSliced(veggie.Diameter)
+            };
+            return result;
+        }
+
     }
 }
