@@ -1,3 +1,7 @@
+using VeggieShop.Interfaces;
+using VeggieShop.Repository;
+using VeggieShop.Services;
+
 namespace VeggieShop
 {
     public class Program
@@ -12,6 +16,9 @@ namespace VeggieShop
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+
+            builder.Services.AddScoped<IVeggieService, VeggieService>();
+            builder.Services.AddScoped<IVeggieRepozitory, VeggieRepository>();
 
             var app = builder.Build();
 
