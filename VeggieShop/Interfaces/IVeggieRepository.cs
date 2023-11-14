@@ -2,7 +2,7 @@
 
 namespace VeggieShop.Interfaces
 {
-    public interface IVeggieRepozitory
+    public interface IVeggieRepository
     {
         IEnumerable<VegetableDetailed> GetAll();
         VegetableDetailed? Get(Guid Id);

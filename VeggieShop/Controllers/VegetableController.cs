@@ -9,9 +9,12 @@ namespace VeggieShop.Controllers
     public class VegetableController : ControllerBase
     {
         private readonly IVeggieService _veggieService;
-        public VegetableController(IVeggieService veggieService)
+        private readonly IProcessingService _processingService;
+
+        public VegetableController(IVeggieService veggieService, IProcessingService processingService)
         {
             _veggieService = veggieService;
+            _processingService = processingService;
         }
 
         [HttpGet]
@@ -31,7 +34,7 @@ namespace VeggieShop.Controllers
                 return NotFound();
             }
                  
-            return sliced ? Ok(_veggieService.GetSlisedVegetable(vegie)) : Ok(vegie);
+            return sliced ? Ok(_processingService.GetSlisedVegetable(vegie)) : Ok(vegie);
         }
 
         [HttpPost]
@@ -88,17 +91,5 @@ namespace VeggieShop.Controllers
             return Ok();
         }
 
-        [HttpGet("composesoupkit")]
-        public IActionResult GetSoupKit([FromQuery] double weight)
-        {
-            var soupKit = _veggieService.GetSoupKit(weight);
-
-            if (soupKit is null)
-            {
-                return Problem("There are no available vegetables for the soupkit.", "Vegetable", StatusCodes.Status406NotAcceptable);
-            }
-
-            return Ok(soupKit);
-        }
     }
 }

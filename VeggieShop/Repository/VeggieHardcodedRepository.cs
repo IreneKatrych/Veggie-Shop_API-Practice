@@ -1,10 +1,51 @@
-﻿using VeggieShop.Models;
+﻿using VeggieShop.Interfaces;
+using VeggieShop.Models;
 
-namespace VeggieShop.VeggiesList
+namespace VeggieShop.Repository
 {
-    public static class VeggiesData
+    public class VeggieHardcodedRepository : IVeggieRepository
     {
-        public static readonly List<VegetableDetailed> vegetablesList = new()
+        public bool Delete(Guid id)
+        {
+            var index = _vegetablesList.FindIndex(veggie => veggie.Guid == id);
+            if (index != -1)
+            {
+                _vegetablesList.RemoveAt(index);
+                return true;
+            }
+            return false;
+        }
+        public Models.VegetableDetailed? Get(Guid id)
+        {
+            return _vegetablesList.FirstOrDefault(veggie => veggie.Guid == id);
+        }
+
+        public void Insert(VegetableDetailed vegetable)
+        {
+            _vegetablesList.Add(vegetable);
+        }
+
+        public void Update(Guid id, Models.VegetableDetailed vegetable)
+        {
+            var veggie = _vegetablesList.Single(veggie => veggie.Guid == id);
+            veggie.Name = vegetable.Name;
+            veggie.PricePerKg = vegetable.PricePerKg;
+            veggie.StockQuantity = vegetable.StockQuantity;
+            veggie.Diameter = vegetable.Diameter;
+        }
+
+        public void SetLocked(Guid id, bool isLocked)
+        {
+            var veggie = _vegetablesList.Single(veggie => veggie.Guid == id);
+            veggie.IsLocked = isLocked;
+        }
+
+        public IEnumerable<Models.VegetableDetailed> GetAll()
+        {
+            return _vegetablesList.Select(veggie => veggie);
+        }
+
+        private static readonly List<VegetableDetailed> _vegetablesList = new()
         {
             new VegetableDetailed
             {
@@ -97,6 +138,5 @@ namespace VeggieShop.VeggiesList
                 IsLocked = false,
             },
         };
-
     }
 }

@@ -18,7 +18,8 @@ namespace VeggieShop
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddScoped<IVeggieService, VeggieService>();
-            builder.Services.AddScoped<IVeggieRepozitory, VeggieRepository>();
+            builder.Services.AddScoped<IProcessingService, ProcessingService>();
+            builder.Services.AddScoped<IVeggieRepository, VeggieHardcodedRepository>();
 
             var app = builder.Build();
 
